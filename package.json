@@ -1,17 +1,33 @@
 {
-  "name": "softhalo-usage-openclaw",
+  "name": "@ahujat/softhalo-usage-openclaw",
   "version": "0.2.0",
   "description": "OpenClaw plugin: records token usage to a local folder for the Soft Halo desktop app.",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahujat/softhalo-usage-openclaw.git"
+  },
+  "homepage": "https://github.com/ahujat/softhalo-usage-openclaw#readme",
   "openclaw": {
-    "extensions": ["./dist/index.js"],
+    "extensions": [
+      "./dist/index.js"
+    ],
     "compat": {
       "pluginApi": ">=2026.6.35",
       "minGatewayVersion": "2026.6.35"
+    },
+    "build": {
+      "openclawVersion": "2026.11.3"
     }
   },
-  "files": ["dist", "openclaw.plugin.json", "README.md", "PRIVACY.md", "LICENSE"],
+  "files": [
+    "dist",
+    "openclaw.plugin.json",
+    "README.md",
+    "PRIVACY.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "prepack": "node scripts/build.mjs",
