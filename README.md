@@ -13,13 +13,18 @@ Soft Halo with AI usage is in beta: get the signed 2.0.5.22 build from the [beta
 
 ## Install
 
-1. Get the plugin folder with its built `dist/` (from a release, or run `npm run build` in a checkout).
-2. Install it into your gateway:
+1. Install it from [ClawHub](https://docs.openclaw.ai/clawhub), where it is published as `@ahujat/softhalo-usage-openclaw`:
+   ```bash
+   openclaw plugins install --accept-capabilities clawhub:@ahujat/softhalo-usage-openclaw
+   ```
+   `--accept-capabilities` consents to the usage hook below. Keep the `clawhub:` prefix: without it OpenClaw looks the name up on npm, where the plugin is not published.
+
+   Or install from a checkout of this repository, which includes the built `dist/` (or run `npm run build`):
    ```bash
    openclaw plugins install --force --accept-capabilities ./softhalo-usage-openclaw
    ```
-   OpenClaw asks for `--force` for any plugin from a local folder, since it is not on ClawHub, and for `--accept-capabilities` to consent to the usage hook below.
-3. In `openclaw.json`, allow the plugin and its usage hook:
+   OpenClaw asks for `--force` for any plugin from a local folder.
+2. In `openclaw.json`, allow the plugin and its usage hook:
    ```json
    "plugins": {
      "allow": ["softhalo-usage"],
@@ -27,9 +32,9 @@ Soft Halo with AI usage is in beta: get the signed 2.0.5.22 build from the [beta
    }
    ```
    OpenClaw loads a plugin it cannot verify only when `plugins.allow` lists it, and puts `llm_output`, the only hook that reports token usage, behind `allowConversationAccess` for every non-bundled plugin. The plugin reads only the usage counters, the cost, model and ids from it; see *What it records*. If `plugins.allow` already lists other plugins, add `softhalo-usage` to that list.
-4. Restart the gateway.
+3. Restart the gateway.
 
-**In WSL, keep the plugin folder on the Linux side** (for example under `~/`), not on a Windows drive such as `/mnt/c` or `/mnt/e`. WSL shows Windows drives as writable by everyone, and OpenClaw refuses to load a plugin from such a folder ("blocked plugin candidate: world-writable path"). The plugin still writes to Soft Halo's Windows folder; see *In WSL* below.
+**Installing from a local folder in WSL? Keep the folder on the Linux side** (for example under `~/`), not on a Windows drive such as `/mnt/c` or `/mnt/e`. WSL shows Windows drives as writable by everyone, and OpenClaw refuses to load a plugin from such a folder ("blocked plugin candidate: world-writable path"). The plugin still writes to Soft Halo's Windows folder; see *In WSL* below.
 
 ## What it records
 
