@@ -2,7 +2,7 @@
 
 **Shows your OpenClaw token usage in Soft Halo's always-on-top overlay, next to Claude Code and your other AI tools.** This plugin records usage numbers to a local folder; the Soft Halo desktop app reads them.
 
-Status: 0.2.0. Tested on 12 November 2026 with OpenClaw 2026.11.3 in WSL: one OpenRouter run was recorded with its provider-billed cost and shown by Soft Halo 2.0.5.20.
+Status: 0.2.1. Tested on 12 November 2026 with OpenClaw 2026.11.3 in WSL: one OpenRouter run was recorded with its provider-billed cost and shown by Soft Halo 2.0.5.20.
 
 ## Requirements
 

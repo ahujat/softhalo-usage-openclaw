@@ -8,7 +8,7 @@ import { existsSync, readdirSync } from 'node:fs'
 import { homedir, release } from 'node:os'
 import { join } from 'node:path'
 
-export const ADAPTER_VERSION = '0.1.0'
+export const ADAPTER_VERSION = '0.2.1'
 /** Soft Halo refuses event files over 16 KiB. */
 export const EVENT_MAX_BYTES = 16 * 1024
 const ID_MAX = 200
