@@ -1,6 +1,6 @@
 {
   "name": "@ahujat/softhalo-usage-openclaw",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "OpenClaw plugin: records token usage to a local folder for the Soft Halo desktop app.",
   "license": "MIT",
   "type": "module",
@@ -23,6 +23,7 @@
   },
   "files": [
     "dist",
+    "assets",
     "openclaw.plugin.json",
     "README.md",
     "PRIVACY.md",

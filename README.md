@@ -2,7 +2,11 @@
 
 **Shows your OpenClaw token usage in Soft Halo's always-on-top overlay, next to Claude Code and your other AI tools.** This plugin records usage numbers to a local folder; the Soft Halo desktop app reads them.
 
-Status: 0.2.1. Tested on 12 November 2026 with OpenClaw 2026.11.3 in WSL: one OpenRouter run was recorded with its provider-billed cost and shown by Soft Halo 2.0.5.20.
+![Soft Halo overlay: Claude 5-hour and weekly limits and Codex weekly limit, each with usage and time left, and today's tokens for Claude, Codex and Hermes](docs/overlay.png)
+
+*Soft Halo's overlay stays on top of other windows; you can resize it and set how transparent it is.*
+
+Status: 0.2.2 (0.2.2 adds the WSL warning below). Tested on 12 November 2026 with OpenClaw 2026.11.3 in WSL: one OpenRouter run was recorded with its provider-billed cost and shown by Soft Halo 2.0.5.20.
 
 ## Requirements
 
@@ -60,7 +64,7 @@ Each file is written as `.tmp` and renamed when whole, so Soft Halo never reads 
 
 ### In WSL
 
-When OpenClaw runs inside WSL on the same Windows PC, the plugin writes to the same Windows folder, through the C: drive mount: `/mnt/c/Users/<Windows user>/AppData/Local/Softhalo/usage/`. It finds the Windows user by looking for an `AppData/Local/Softhalo` folder under `/mnt/c/Users`. If exactly one user has one, it uses that. If several do, it uses the one whose name matches your Linux user name. If it finds none, it writes nothing. If your C: drive is mounted elsewhere, or the names differ, set `SOFTHALO_USAGE_DIR` to the folder, for example `/mnt/c/Users/Ann/AppData/Local/Softhalo/usage`. `SOFTHALO_USAGE_DIR` also overrides the folder on Windows.
+When OpenClaw runs inside WSL on the same Windows PC, the plugin writes to the same Windows folder, through the C: drive mount: `/mnt/c/Users/<Windows user>/AppData/Local/Softhalo/usage/`. It finds the Windows user by looking for an `AppData/Local/Softhalo` folder under `/mnt/c/Users`. If exactly one user has one, it uses that. If several do, it uses the one whose name matches your Linux user name. If it finds none (C: isn't mounted, Soft Halo isn't installed on Windows, or several users have it and none matches), it writes nothing and logs one warning when OpenClaw loads it, saying which. If your C: drive is mounted elsewhere, or the names differ, set `SOFTHALO_USAGE_DIR` to the folder, for example `/mnt/c/Users/Ann/AppData/Local/Softhalo/usage`. `SOFTHALO_USAGE_DIR` also overrides the folder on Windows. If the folder it chose can't be written (for example `SOFTHALO_USAGE_DIR` on a drive that isn't mounted), it records nothing and logs one warning saying so, once.
 
 It reads only that count file and checks whether `inbox\.full` exists.
 

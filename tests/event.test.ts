@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { attemptCost, buildEvent, callKind, isWsl, profileId, publish, resolveRoot, safeName, usageRoot } from '../src/event.ts'
+import { attemptCost, buildEvent, callKind, isWsl, profileId, publish, resolveRoot, safeName, usageRoot, writeFailedNotice, wslMissNotice } from '../src/event.ts'
 
 const NOW = new Date('2026-11-09T10:00:00.000Z')
 
@@ -109,6 +109,36 @@ test('inside WSL the Soft Halo folder of the Windows user is used', () => {
     assert.equal(resolveRoot({ ...wsl, SOFTHALO_USAGE_DIR: '/mnt/d/x/' }, 'linux', '/home/ann', '', users), '/mnt/d/x')
   } finally {
     rmSync(users, { recursive: true, force: true })
+  }
+})
+
+test('inside WSL without a folder the warning says why', () => {
+  const users = tempRoot()
+  try {
+    assert.match(wslMissNotice(join(users, 'missing')), /isn't visible at/)
+    assert.match(wslMissNotice(users), /no Windows user/)
+    mkdirSync(join(users, 'Ann', 'AppData', 'Local', 'Softhalo'), { recursive: true })
+    mkdirSync(join(users, 'Sam', 'AppData', 'Local', 'Softhalo'), { recursive: true })
+    const notice = wslMissNotice(users)
+    assert.match(notice, /several Windows users/)
+    assert.match(notice, /SOFTHALO_USAGE_DIR/)
+  } finally {
+    rmSync(users, { recursive: true, force: true })
+  }
+})
+
+test('a folder that cannot be written names the folder and the error code', async () => {
+  const dir = tempRoot()
+  try {
+    writeFileSync(join(dir, 'x'), 'a file, so x/usage can never be a folder')
+    const root = join(dir, 'x', 'usage')
+    const error = await publish(root, buildEvent({ usage: { input: 1, output: 2 } } as never, {} as never, 'oc-test', NOW), NOW).then(() => null, e => e)
+    assert.ok(error, 'the write must fail')
+    const notice = writeFailedNotice(root, error)
+    assert.match(notice, /can't write to/)
+    assert.match(notice, /\((ENOTDIR|EEXIST|ENOENT)\)/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
   }
 })
 

@@ -8,7 +8,7 @@ import { existsSync, readdirSync } from 'node:fs'
 import { homedir, release } from 'node:os'
 import { join } from 'node:path'
 
-export const ADAPTER_VERSION = '0.2.1'
+export const ADAPTER_VERSION = '0.2.2'
 /** Soft Halo refuses event files over 16 KiB. */
 export const EVENT_MAX_BYTES = 16 * 1024
 const ID_MAX = 200
@@ -108,6 +108,29 @@ export function wslUsageRoot(usersDir        , linuxUser                    )   
   const pick =
     people.length === 1 ? people[0] : people.find(name => !!linuxUser && name.toLowerCase() === linuxUser.toLowerCase())
   return pick ? `${usersDir.replace(/\/+$/, '')}/${pick}/AppData/Local/Softhalo/usage` : null
+}
+
+/** The one warning logged when WSL gives no folder, saying why nothing will be recorded. */
+export function wslMissNotice(usersDir = WSL_USERS_DIR)         {
+  let why        
+  try {
+    const people = readdirSync(usersDir, { withFileTypes: true })
+      .filter(d => d.isDirectory() && !NOT_A_USER.has(d.name.toLowerCase()))
+      .filter(d => existsSync(`${usersDir}/${d.name}/AppData/Local/Softhalo`))
+    why =
+      people.length > 1
+        ? `several Windows users under ${usersDir} have a Soft Halo folder and none is named like your Linux user`
+        : `no Windows user under ${usersDir} has a Soft Halo folder (is Soft Halo installed on Windows?)`
+  } catch {
+    why = `the Windows drive isn't visible at ${usersDir}`
+  }
+  return `Soft Halo Usage: nothing is recorded, because ${why}. Set SOFTHALO_USAGE_DIR to Soft Halo's usage folder, for example /mnt/c/Users/<you>/AppData/Local/Softhalo/usage.`
+}
+
+/** The one warning logged when the usage folder can't be written (a drive not mounted, no permission). */
+export function writeFailedNotice(root        , error         )         {
+  const code = (error                                     )?.code ?? 'write failed'
+  return `Soft Halo Usage: can't write to ${root} (${code}), so nothing is recorded. Check that the drive is mounted and SOFTHALO_USAGE_DIR, if set, names Soft Halo's usage folder.`
 }
 
 /** Where to write: SOFTHALO_USAGE_DIR if set, the Windows side inside WSL, else this system's own folder. */
@@ -245,6 +268,7 @@ export function defaults(env                    = process.env) {
   const home = env.HOME || env.USERPROFILE || homedir()
   return {
     root: resolveRoot(env, process.platform, home, release()),
+    wsl: isWsl(env, process.platform, release()),
     stateDir: env.OPENCLAW_STATE_DIR || join(home, '.openclaw'),
   }
 }
