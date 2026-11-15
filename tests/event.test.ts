@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { attemptCost, buildEvent, callKind, isWsl, profileId, publish, resolveRoot, safeName, usageRoot, writeFailedNotice, wslMissNotice } from '../src/event.ts'
+import { attemptCost, buildEvent, callKind, isWsl, profileId, publish, resolveRoot, safeName, usageRoot, writeFailedNotice, wslMissNotice, wslRootFinder } from '../src/event.ts'
 
 const NOW = new Date('2026-11-09T10:00:00.000Z')
 
@@ -194,4 +194,26 @@ test('while the inbox is full nothing is written, and the next event reports the
 test('file names stay plain even for odd session ids', () => {
   assert.equal(safeName('../../etc'), '______etc')
   assert.equal(safeName(''), 'unknown')
+})
+
+test('an unmounted Windows drive: the warning says to mount it', () => {
+  assert.match(wslMissNotice('/no/such/mnt/c/Users'), /Mount your Windows drive/)
+})
+
+test('a drive mounted later is found within a minute, without a restart', () => {
+  const base = mkdtempSync(join(tmpdir(), 'softhalo-oc-mount-'))
+  try {
+    const users = join(base, 'c', 'Users').split('\\').join('/')
+    let clock = 1_000_000
+    const rootNow = wslRootFinder(users, 'u', () => clock)
+    assert.equal(rootNow(), null)
+    // The drive is mounted and Soft Halo's folder appears; the plugin looks again only after a minute.
+    mkdirSync(join(users, 'Tarun', 'AppData', 'Local', 'Softhalo'), { recursive: true })
+    clock += 30_000
+    assert.equal(rootNow(), null)
+    clock += 31_000
+    assert.equal(rootNow(), `${users}/Tarun/AppData/Local/Softhalo/usage`)
+  } finally {
+    rmSync(base, { recursive: true, force: true })
+  }
 })

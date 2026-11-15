@@ -110,21 +110,44 @@ export function wslUsageRoot(usersDir: string, linuxUser: string | undefined): s
   return pick ? `${usersDir.replace(/\/+$/, '')}/${pick}/AppData/Local/Softhalo/usage` : null
 }
 
-/** The one warning logged when WSL gives no folder, saying why nothing will be recorded. */
+/**
+ * The one warning logged when WSL gives no folder: why nothing is recorded yet, and the first thing
+ * to do about it. The plugin keeps looking (see wslRootFinder), so no restart is needed.
+ */
 export function wslMissNotice(usersDir = WSL_USERS_DIR): string {
-  let why: string
+  const head = 'Soft Halo Usage: nothing is being recorded'
+  let people: number
   try {
-    const people = readdirSync(usersDir, { withFileTypes: true })
+    people = readdirSync(usersDir, { withFileTypes: true })
       .filter(d => d.isDirectory() && !NOT_A_USER.has(d.name.toLowerCase()))
-      .filter(d => existsSync(`${usersDir}/${d.name}/AppData/Local/Softhalo`))
-    why =
-      people.length > 1
-        ? `several Windows users under ${usersDir} have a Soft Halo folder and none is named like your Linux user`
-        : `no Windows user under ${usersDir} has a Soft Halo folder (is Soft Halo installed on Windows?)`
+      .filter(d => existsSync(`${usersDir}/${d.name}/AppData/Local/Softhalo`)).length
   } catch {
-    why = `the Windows drive isn't visible at ${usersDir}`
+    return `${head}, because the Windows drive isn't visible at ${usersDir}. Mount your Windows drive; recording starts on a later run once it is. If Windows is mounted somewhere else, set SOFTHALO_USAGE_DIR to Soft Halo's usage folder there.`
   }
-  return `Soft Halo Usage: nothing is recorded, because ${why}. Set SOFTHALO_USAGE_DIR to Soft Halo's usage folder, for example /mnt/c/Users/<you>/AppData/Local/Softhalo/usage.`
+  const example = `${usersDir.replace(/\/+$/, '')}/<you>/AppData/Local/Softhalo/usage`
+  if (people > 1) {
+    return `${head}, because several Windows users under ${usersDir} have a Soft Halo folder and none is named like your Linux user. Set SOFTHALO_USAGE_DIR to yours, for example ${example}.`
+  }
+  return `${head}, because no Windows user under ${usersDir} has a Soft Halo folder. Install and start Soft Halo on Windows; recording starts on a later run once it has. If its folder is elsewhere, set SOFTHALO_USAGE_DIR to it, for example ${example}.`
+}
+
+/** In WSL without a folder, look again at most this often, on a model run. */
+export const WSL_RETRY_MS = 60_000
+
+/**
+ * Inside WSL with no folder found yet: a lookup to call on each run. It looks again at most once a
+ * minute, so a drive mounted (or Soft Halo installed) later starts recording without a restart. No timer.
+ */
+export function wslRootFinder(usersDir: string, linuxUser: string | undefined, now: () => number = Date.now): () => string | null {
+  let found: string | null = null
+  let nextLook = now() + WSL_RETRY_MS
+  return () => {
+    if (found === null && now() >= nextLook) {
+      found = wslUsageRoot(usersDir, linuxUser)
+      nextLook = now() + WSL_RETRY_MS
+    }
+    return found
+  }
 }
 
 /** The one warning logged when the usage folder can't be written (a drive not mounted, no permission). */
